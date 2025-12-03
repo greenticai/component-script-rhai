@@ -1,12 +1,42 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "component-script-rhai handle output",
+  "title": "component-script-rhai invocation output",
   "type": "object",
-  "required": ["message"],
   "properties": {
-    "message": {
-      "type": "string",
-      "description": "Response returned by the handle entry point"
+    "payload": {
+      "description": "Payload returned by the Rhai script",
+      "type": ["object", "array", "string", "number", "boolean", "null"]
+    },
+    "state_updates": {
+      "description": "State mutations to persist after execution",
+      "type": ["object", "array", "string", "number", "boolean", "null"]
+    },
+    "control": {
+      "type": "object",
+      "description": "Optional routing hints",
+      "properties": {
+        "out": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "err": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "error": {
+      "type": "object",
+      "description": "Optional error surfaced by the script",
+      "properties": {
+        "kind": { "type": "string" },
+        "message": { "type": "string" },
+        "details": { "type": ["object", "array", "string", "number", "boolean", "null"] }
+      },
+      "required": ["kind", "message"],
+      "additionalProperties": true
     }
-  }
+  },
+  "required": ["payload", "state_updates"]
 }

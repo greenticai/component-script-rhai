@@ -1,12 +1,31 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "component-script-rhai handle input",
+  "title": "component-script-rhai invocation input",
   "type": "object",
-  "required": ["input"],
+  "required": ["config", "payload", "state"],
   "properties": {
-    "input": {
-      "type": "string",
-      "description": "Opaque payload forwarded to handle"
+    "config": {
+      "type": "object",
+      "description": "Component configuration including the Rhai script"
+    },
+    "msg": {
+      "description": "Optional message envelope propagated from the host",
+      "type": ["object", "null"]
+    },
+    "payload": {
+      "description": "Invocation payload forwarded to the script",
+      "type": ["object", "array", "string", "number", "boolean", "null"]
+    },
+    "state": {
+      "description": "State map forwarded to the script",
+      "type": ["object", "array", "string", "number", "boolean", "null"]
+    },
+    "connections": {
+      "type": "array",
+      "description": "Outgoing node identifiers wired to this component",
+      "items": { "type": "string" },
+      "default": []
     }
-  }
+  },
+  "additionalProperties": true
 }

@@ -4,11 +4,22 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
-    "echo_prefix": {
+    "script": {
       "type": "string",
-      "description": "Prefix prepended to every handle response",
-      "default": "component-script-rhai",
-      "x-default-applied": true
+      "description": "Rhai source code executed for each invocation"
+    },
+    "result_mode": {
+      "type": "string",
+      "description": "Wrap script output in {output: ...} or return raw",
+      "enum": ["wrap", "raw"],
+      "default": "wrap"
+    },
+    "on_error": {
+      "type": "string",
+      "description": "Whether to fail or continue when the script errors",
+      "enum": ["fail", "continue"],
+      "default": "fail"
     }
-  }
+  },
+  "required": ["script"]
 }

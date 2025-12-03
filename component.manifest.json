@@ -40,6 +40,6 @@
     "component_wasm": "target/wasm32-wasip2/release/component_script_rhai.wasm"
   },
   "hashes": {
-    "component_wasm": "blake3:0000000000000000000000000000000000000000000000000000000000000000"
+    "component_wasm": "blake3:9eaa292deb1514593020a031e215436a3d865bc3c610292ffc7350242bef20e8"
   }
 }
