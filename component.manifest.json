@@ -1,45 +1,82 @@
 {
   "$schema": "https://greentic-ai.github.io/greentic-component/schemas/v1/component.manifest.schema.json",
-  "id": "ai.greentic.component-script-rhai",
-  "name": "component-script-rhai",
-  "version": "0.1.0",
-  "world": "greentic:component/component@0.4.0",
-  "describe_export": "get-manifest",
-  "supports": ["messaging"],
-  "profiles": {
-    "default": "stateless",
-    "supported": ["stateless"]
+  "artifacts": {
+    "component_wasm": "target/wasm32-wasip2/release/component_script_rhai.wasm"
   },
   "capabilities": {
-    "wasi": {
-      "filesystem": {
-        "mode": "none",
-        "mounts": []
-      },
-      "random": true,
-      "clocks": true
-    },
     "host": {
       "messaging": {
         "inbound": true,
         "outbound": true
       },
-      "telemetry": {
-        "scope": "node"
-      },
       "secrets": {
         "required": []
+      },
+      "telemetry": {
+        "scope": "node"
       }
+    },
+    "wasi": {
+      "clocks": true,
+      "filesystem": {
+        "mode": "none",
+        "mounts": []
+      },
+      "random": true
     }
   },
+  "config_schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "on_error": {
+        "default": "fail",
+        "description": "Whether to fail or continue when the script errors",
+        "enum": [
+          "fail",
+          "continue"
+        ],
+        "type": "string"
+      },
+      "result_mode": {
+        "default": "wrap",
+        "description": "Wrap script output in {output: ...} or return raw",
+        "enum": [
+          "wrap",
+          "raw"
+        ],
+        "type": "string"
+      },
+      "script": {
+        "description": "Rhai source code executed for each invocation",
+        "type": "string"
+      }
+    },
+    "required": [
+      "script"
+    ],
+    "title": "component-script-rhai component configuration",
+    "type": "object"
+  },
+  "describe_export": "get-manifest",
+  "hashes": {
+    "component_wasm": "blake3:cddeea68e34b87d9541e6dd8ae794b394a0bf1b3a50508220d105931c9fa588d"
+  },
+  "id": "ai.greentic.component-script-rhai",
   "limits": {
     "memory_mb": 128,
     "wall_time_ms": 1000
   },
-  "artifacts": {
-    "component_wasm": "target/wasm32-wasip2/release/component_script_rhai.wasm"
+  "name": "component-script-rhai",
+  "profiles": {
+    "default": "stateless",
+    "supported": [
+      "stateless"
+    ]
   },
-  "hashes": {
-    "component_wasm": "blake3:9eaa292deb1514593020a031e215436a3d865bc3c610292ffc7350242bef20e8"
-  }
+  "supports": [
+    "messaging"
+  ],
+  "version": "0.1.0",
+  "world": "greentic:component/component@0.4.0"
 }

@@ -1,0 +1,42 @@
+id: ai.greentic.component-script-rhai.custom
+kind: component-config
+description: Auto-generated custom config for ai.greentic.component-script-rhai
+nodes:
+  ask_config:
+    questions:
+      fields:
+      - id: on_error
+        prompt: Whether to fail or continue when the script errors
+        type: enum
+        options:
+        - fail
+        - continue
+        default: fail
+      - id: result_mode
+        prompt: 'Wrap script output in {output: ...} or return raw'
+        type: enum
+        options:
+        - wrap
+        - raw
+        default: wrap
+      - id: script
+        prompt: Rhai source code executed for each invocation
+        type: string
+    routing:
+    - to: emit_config
+  emit_config:
+    template: |-
+      {
+        "node_id": "COMPONENT_STEP",
+        "node": {
+          "tool": {
+            "component": "ai.greentic.component-script-rhai",
+            "on_error": "{{state.on_error}}",
+            "result_mode": "{{state.result_mode}}",
+            "script": "{{state.script}}"
+          },
+          "routing": [
+            { "to": "NEXT_NODE_PLACEHOLDER" }
+          ]
+        }
+      }
