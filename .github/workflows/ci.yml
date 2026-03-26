@@ -1,26 +1,16 @@
 name: CI
-
 on:
+  workflow_call:
   push:
-    branches: ["main"]
+    branches: [main]
   pull_request:
 
 permissions:
   contents: read
 
 jobs:
-  rust:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: wasm32-wasip2
-      - name: Cargo fmt
-        run: cargo fmt --all -- --check
-      - name: Cargo clippy
-        run: cargo clippy --workspace --all-targets -- -D warnings
-      - name: Cargo test
-        run: cargo test --workspace --all-targets
-      - name: Cargo check (wasm32-wasip2)
-        run: cargo check --target wasm32-wasip2
+  ci:
+    uses: greenticai/.github/.github/workflows/wasm-component-ci.yml@main
+    with:
+      wasm-build-args: "--target wasm32-wasip2"
+      validate-component: false
