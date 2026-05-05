@@ -159,63 +159,88 @@ fn build_component_result(
 
 #[cfg(target_arch = "wasm32")]
 mod component {
-    use super::{describe_payload, handle_invocation};
-    use greentic_interfaces_guest::component::node::{
-        self, ExecCtx, InvokeResult, LifecycleStatus, StreamEvent,
-    };
+    use super::handle_invocation;
+    use greentic_interfaces_guest::component_v0_6::node;
+    use greentic_types::cbor::canonical;
 
     pub(super) struct Component;
 
     impl node::Guest for Component {
-        fn get_manifest() -> String {
-            describe_payload()
+        fn describe() -> node::ComponentDescriptor {
+            node::ComponentDescriptor {
+                name: "component-script-rhai".to_string(),
+                version: env!("CARGO_PKG_VERSION").to_string(),
+                summary: Some("Execute Rhai scripts over invocation envelopes".to_string()),
+                capabilities: Vec::new(),
+                ops: Vec::new(),
+                schemas: Vec::new(),
+                setup: None,
+            }
         }
 
-        fn on_start(_ctx: ExecCtx) -> Result<LifecycleStatus, String> {
-            Ok(LifecycleStatus::Ok)
-        }
+        fn invoke(
+            _op: String,
+            envelope: node::InvocationEnvelope,
+        ) -> Result<node::InvocationResult, node::NodeError> {
+            // Decode the CBOR payload into a JSON Value, then delegate to the
+            // existing JSON-based handle_invocation logic.
+            let input_json: serde_json::Value = canonical::from_cbor(&envelope.payload_cbor)
+                .map_err(|err| node::NodeError {
+                    code: "CborDecodeError".to_string(),
+                    message: format!("Failed to decode payload CBOR: {err}"),
+                    retryable: false,
+                    backoff_ms: None,
+                    details: None,
+                })?;
 
-        fn on_stop(_ctx: ExecCtx, _reason: String) -> Result<LifecycleStatus, String> {
-            Ok(LifecycleStatus::Ok)
-        }
+            let input_str = serde_json::to_string(&input_json).map_err(|err| node::NodeError {
+                code: "SerializationError".to_string(),
+                message: format!("Failed to serialize input to JSON: {err}"),
+                retryable: false,
+                backoff_ms: None,
+                details: None,
+            })?;
 
-        fn invoke(_ctx: ExecCtx, _op: String, input: String) -> InvokeResult {
-            match handle_invocation(&input) {
-                Ok(result) => match serde_json::to_string(&result) {
-                    Ok(json) => InvokeResult::Ok(json),
-                    Err(err) => InvokeResult::Err(node::NodeError {
-                        code: "SerializationError".to_string(),
-                        message: format!("Failed to serialize result: {err}"),
-                        retryable: false,
-                        backoff_ms: None,
-                        details: None,
-                    }),
-                },
-                Err(err) => InvokeResult::Err(node::NodeError {
+            match handle_invocation(&input_str) {
+                Ok(result) => {
+                    let result_json =
+                        serde_json::to_value(&result).map_err(|err| node::NodeError {
+                            code: "SerializationError".to_string(),
+                            message: format!("Failed to serialize result: {err}"),
+                            retryable: false,
+                            backoff_ms: None,
+                            details: None,
+                        })?;
+
+                    let output_cbor = canonical::to_canonical_cbor_allow_floats(&result_json)
+                        .map_err(|err| node::NodeError {
+                            code: "CborEncodeError".to_string(),
+                            message: format!("Failed to encode result as CBOR: {err}"),
+                            retryable: false,
+                            backoff_ms: None,
+                            details: None,
+                        })?;
+
+                    Ok(node::InvocationResult {
+                        ok: result.error.is_none(),
+                        output_cbor,
+                        output_metadata_cbor: None,
+                    })
+                }
+                Err(err) => Err(node::NodeError {
                     code: err.kind,
                     message: err.message,
                     retryable: false,
                     backoff_ms: None,
-                    details: err.details.and_then(|d| serde_json::to_string(&d).ok()),
+                    details: None,
                 }),
-            }
-        }
-
-        fn invoke_stream(_ctx: ExecCtx, op: String, input: String) -> Vec<StreamEvent> {
-            match Self::invoke(_ctx, op, input) {
-                InvokeResult::Ok(json) => vec![
-                    StreamEvent::Progress(0),
-                    StreamEvent::Data(json),
-                    StreamEvent::Done,
-                ],
-                InvokeResult::Err(err) => vec![StreamEvent::Error(err.message)],
             }
         }
     }
 }
 
 #[cfg(target_arch = "wasm32")]
-greentic_interfaces_guest::export_component_node!(component::Component);
+greentic_interfaces_guest::export_component_v060!(component::Component);
 
 #[cfg(test)]
 mod tests {
