@@ -160,7 +160,7 @@ fn build_component_result(
 #[cfg(target_arch = "wasm32")]
 mod component {
     use super::handle_invocation;
-    use greentic_interfaces_guest::component_v0_6::node;
+    use greentic_interfaces_guest::component_v0_6::{component_i18n, component_qa, node};
     use greentic_types::cbor::canonical;
 
     pub(super) struct Component;
@@ -237,10 +237,36 @@ mod component {
             }
         }
     }
+
+    impl component_qa::Guest for Component {
+        fn qa_spec(_mode: component_qa::QaMode) -> Vec<u8> {
+            // No QA wizard for this component — return empty CBOR map.
+            vec![0xa0]
+        }
+
+        fn apply_answers(
+            _mode: component_qa::QaMode,
+            _current_config: Vec<u8>,
+            _answers: Vec<u8>,
+        ) -> Vec<u8> {
+            // No QA wizard — return empty CBOR map.
+            vec![0xa0]
+        }
+    }
+
+    impl component_i18n::Guest for Component {
+        fn i18n_keys() -> Vec<String> {
+            Vec::new()
+        }
+    }
 }
 
 #[cfg(target_arch = "wasm32")]
-greentic_interfaces_guest::export_component_v060!(component::Component);
+greentic_interfaces_guest::export_component_v060!(
+    component::Component,
+    component_qa: component::Component,
+    component_i18n: component::Component,
+);
 
 #[cfg(test)]
 mod tests {
